@@ -4,6 +4,10 @@ Unreal Engine 5 editor plugin for creating high-resolution landscape actors from
 
 Select proxy actors in the viewport, choose a resolution multiplier, and the plugin will create new `ALandscape` actors with upscaled heightmap and weightmap data using bilinear interpolation.
 
+![Plugin Window](Screenshots/plugin.png)
+
+![Original vs 2x Upscaled](Screenshots/2x.png)
+
 ## Features
 
 - Upscale landscape resolution by 1x, 2x, 4x, 8x, 16x, or 32x
