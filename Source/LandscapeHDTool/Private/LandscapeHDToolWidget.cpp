@@ -30,6 +30,30 @@ void SLandscapeHDToolWidget::Construct(const FArguments& InArgs)
 		]
 		+ SVerticalBox::Slot()
 		.AutoHeight()
+		.Padding(10, 2, 10, 6)
+		[
+			SNew(SCheckBox)
+			.IsChecked(this, &SLandscapeHDToolWidget::GetCopyMaterialCheckState)
+			.OnCheckStateChanged(this, &SLandscapeHDToolWidget::OnCopyMaterialCheckChanged)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Copy material from Parent Landscape")))
+			]
+		]
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(10, 0, 10, 6)
+		[
+			SNew(SCheckBox)
+			.IsChecked(this, &SLandscapeHDToolWidget::GetEnableNaniteCheckState)
+			.OnCheckStateChanged(this, &SLandscapeHDToolWidget::OnEnableNaniteCheckChanged)
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Enable Nanite")))
+			]
+		]
+		+ SVerticalBox::Slot()
+		.AutoHeight()
 		.Padding(10)
 		[
 			SNew(SHorizontalBox)
@@ -294,6 +318,26 @@ static void UpscaleWeightmap(const TArray<uint8>& Src, int32 SrcW, int32 SrcH,
 			Dst[Y * DstW + X] = (uint8)FMath::Clamp(FMath::RoundToInt(Val), 0, 255);
 		}
 	}
+}
+
+void SLandscapeHDToolWidget::OnCopyMaterialCheckChanged(ECheckBoxState NewState)
+{
+	bCopyMaterialFromParent = NewState;
+}
+
+ECheckBoxState SLandscapeHDToolWidget::GetCopyMaterialCheckState() const
+{
+	return bCopyMaterialFromParent;
+}
+
+void SLandscapeHDToolWidget::OnEnableNaniteCheckChanged(ECheckBoxState NewState)
+{
+	bEnableNanite = NewState;
+}
+
+ECheckBoxState SLandscapeHDToolWidget::GetEnableNaniteCheckState() const
+{
+	return bEnableNanite;
 }
 
 FReply SLandscapeHDToolWidget::OnRefreshClicked()
@@ -581,6 +625,31 @@ FReply SLandscapeHDToolWidget::OnCreateClicked(int32 ResolutionMultiplier)
 			ELandscapeImportAlphamapType::Additive,
 			TArrayView<const FLandscapeLayer>()
 		);
+
+		if (bCopyMaterialFromParent == ECheckBoxState::Checked && SourceLandscape)
+		{
+			UMaterialInterface* ParentMaterial = SourceLandscape->GetLandscapeMaterial();
+			if (ParentMaterial)
+			{
+				NewLandscape->LandscapeMaterial = ParentMaterial;
+				Result += FString::Printf(TEXT("    Material copied from parent: %s\n"), *ParentMaterial->GetName());
+			}
+			else
+			{
+				Result += TEXT("    Parent has no material set\n");
+			}
+		}
+
+		if (bEnableNanite == ECheckBoxState::Checked && SourceLandscape)
+		{
+			FProperty* NaniteProp = ALandscapeProxy::StaticClass()->FindPropertyByName(FName("bEnableNanite"));
+			if (NaniteProp)
+			{
+				bool bSourceNanite = SourceLandscape->IsNaniteEnabled();
+				NaniteProp->SetValue_InContainer(NewLandscape, &bSourceNanite);
+				Result += FString::Printf(TEXT("    Nanite: %s (copied from parent)\n"), bSourceNanite ? TEXT("enabled") : TEXT("disabled"));
+			}
+		}
 
 		CreatedCount++;
 		Result += FString::Printf(TEXT("[%d] %s - CREATED (%dx)\n"), Idx + 1, *SourceProxy->GetName(), ResolutionMultiplier);

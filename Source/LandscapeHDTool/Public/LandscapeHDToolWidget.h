@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/Input/SCheckBox.h"
 
 class SLandscapeHDToolWidget : public SCompoundWidget
 {
@@ -14,6 +15,12 @@ public:
 private:
 	FReply OnRefreshClicked();
 	FReply OnCreateClicked(int32 ResolutionMultiplier);
+	void OnCopyMaterialCheckChanged(ECheckBoxState NewState);
+	ECheckBoxState GetCopyMaterialCheckState() const;
+	void OnEnableNaniteCheckChanged(ECheckBoxState NewState);
+	ECheckBoxState GetEnableNaniteCheckState() const;
 	
 	TSharedPtr<STextBlock> ResultText;
+	ECheckBoxState bCopyMaterialFromParent = ECheckBoxState::Unchecked;
+	ECheckBoxState bEnableNanite = ECheckBoxState::Unchecked;
 };
